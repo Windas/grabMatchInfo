@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 import jieba
-
+import re
 import urllib, urllib2
 
 from bs4 import BeautifulSoup
@@ -31,17 +31,13 @@ class Lanqiao(Grab):
     def grabInfo(self):
         self.setSoup(self.url)
         
-        
-        self.matchnotice = self.lanqiao + self.soup.find('a', text='大赛通知').attrs['href']
+        self.matchnotice = self.lanqiao + self.soup.find('a', text
+                                                         ='大赛通知').attrs['href']
         self.schedule = self.lanqiao + self.soup.find('a', text='赛程安排').attrs['href']
-        self.matchproject = self.lanqiao + self.soup.find('a', text='竞赛科目').attrs['href']
-        self.matchaddress = self.lanqiao + self.soup.find('a', text='赛点名单').attrs['href']
 
     def displayAll(self):
         print self.matchnotice
         print self.schedule
-        print self.matchproject
-        print self.matchaddress
 
 class ISM(Grab):
     def __init__(self, url="http://www.ciscn.cn/"):
@@ -70,23 +66,57 @@ class ISM(Grab):
     def grabInfo(self):
         self.setSoup(self.url)
         div = self.soup.find('div', attrs={'class':'bisai4'})
-        self.matchname = div.find('a').attrs['title']
+        matchname = div.find('a').attrs['title']
 
-        seg_list = jieba.cut(self.matchname)
-        print list(seg_list)[2]
+        self.num = list(jieba.cut(matchname))[2]
+
+        div = self.soup.find('div', attrs={'class':'tui'})
+        p = div.find('p')
         self.matchnotice = self.url + div.find('a').attrs['href']
 
-        
+        div = self.soup.find('div', attrs={'class':'kuailian'})
+        self.schedule = self.url + div.find('a').attrs['href']
 
     def displayAll(self):
-        print self.matchname
+        print self.num
         print self.matchnotice
-            
+        print self.schedule
+
+
+class ChinaSWCup(Grab):
+    def __init__(self, url="http://www.cnsoftbei.com/"):
+        self.url = url
+
+    def setSoup(self, url):
+        self.soup = BeautifulSoup(urllib.urlopen(url).read(), from_encoding='gb18030')
+
+    def grabInfo(self):
+        self.setSoup(self.url)
+        self.matchnotice = self.soup.find('a', text='活动介绍').attrs['href']
+
+    def displayAll(self):
+        print self.matchnotice
+
+
+class HWSmartDesign(Grab):
+    def __init__(self, url="http://www.aidc.org.cn/"):
+        self.url = url
+
+    def grabInfo(self):
+        self.setSoup(self.url)
+
+        matchname = self.soup.find('p', attrs={'class':'title'}).text.strip()
+        self.num = list(jieba.cut(matchname))[2]
+
+        self.matchnotice = self.url + self.soup.find_all('a', attrs={'target':'_blank'})[0].attrs['href']
+        self.schedule = self.url + self.soup.find_all('a', attrs={'target':'_blank'})[2].attrs['href']
+
         
 
         
-ism = ISM()
+
+        
+ism = HWSmartDesign()
 
 ism.grabInfo()
-ism.displayAll()
 
